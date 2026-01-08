@@ -1,17 +1,32 @@
-# File: step1_basic.py
-import requests  # Library for making HTTP requests
+# File: step2_error_handling.py
+import requests
+import sys
 
-# GitHub API endpoint for a specific repository
-url = "https://api.github.com/repos/ArduPilot/ardupilot"
+def fetch_repo_info(owner, repo_name):
+    """Fetch information about a repository"""
+    url = f"https://api.github.com/repos/{owner}/{repo_name}"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises exception for bad status codes
+        
+        data = response.json()
+        return {
+            'name': data['full_name'],
+            'description': data['description'],
+            'stars': data['stargazers_count'],
+            'open_issues': data['open_issues_count']
+        }
+        
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error: {e}")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
-# Make the request
-response = requests.get(url)
-print(response.content)
-# Check if successful
-if response.status_code == 200:
-    data = response.json()  # Convert JSON response to Python dictionary
-    print(f"Repository: {data['full_name']}")
-    print(f"Description: {data['description']}")
-    print(f"Stars: {data['stargazers_count']}")
-else:
-    print(f"Error: {response.status_code}")
+# Test it
+if __name__ == "__main__":
+    info = fetch_repo_info("Ardupilot", "ardupilot")
+    if info:
+        print(f"✅ Success! Found: {info['name']} with {info['stars']} stars")
